@@ -104,6 +104,7 @@ def folder_main(folder_path):
         result = result[..., ::-1]  # convert to bgr
         images = [result]
         for i, mask in enumerate(masks):
+            print("mask", mask)
             res_img = result.copy()
             bbox, cls_name = boxes[0][i], class_names[0][i]
             res_img, heat_map = get_res_img(bbox, mask, res_img)
