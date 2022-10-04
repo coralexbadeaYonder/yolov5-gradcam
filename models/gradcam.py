@@ -59,6 +59,9 @@ class YOLOV5GradCAM:
         preds, logits = self.model(input_img)
         print("[INFO] model-forward took: ", round(time.time() - tic, 4), 'seconds')
         for logit, cls, cls_name in zip(logits[0], preds[1][0], preds[2][0]):
+            print("logits", logits)
+            print("cls", cls)
+            print("cls_name", cls_name)
             if class_idx:
                 score = logit[cls]
             else:
@@ -68,15 +71,20 @@ class YOLOV5GradCAM:
             score.backward(retain_graph=True)
             print(f"[INFO] {cls_name}, model-backward took: ", round(time.time() - tic, 4), 'seconds')
             gradients = self.gradients['value']
+            print("gradients", gradients)
             activations = self.activations['value']
+            print("activations", activations)
             b, k, u, v = gradients.size()
             alpha = gradients.view(b, k, -1).mean(2)
             weights = alpha.view(b, k, 1, 1)
             saliency_map = (weights * activations).sum(1, keepdim=True)
+            print("saliency_map1:", saliency_map)
             saliency_map = F.relu(saliency_map)
             saliency_map = F.upsample(saliency_map, size=(h, w), mode='bilinear', align_corners=False)
+            print("saliency_map2:", saliency_map)
             saliency_map_min, saliency_map_max = saliency_map.min(), saliency_map.max()
             saliency_map = (saliency_map - saliency_map_min).div(saliency_map_max - saliency_map_min).data
+            print("saliency_map3:", saliency_map)
             saliency_maps.append(saliency_map)
         return saliency_maps, logits, preds
 
